@@ -168,7 +168,7 @@
     function uploadAndPrint() {
         const status = document.getElementById('status');
         status.className = "loading";
-        status.innerText = "Google Drive par file upload ho rahi hai... ⏳";
+        status.innerText = "file upload ho rahi hai... ⏳";
         
         const uploadReader = new FileReader();
         uploadReader.onload = function(e) {
