@@ -3,57 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quick Print Service</title>
+    <title>Ambition Mart - Advanced Print</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background: linear-gradient(135deg, #74ebd5, #9face6); min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
-        .container { background: #ffffff; width: 100%; max-width: 450px; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); text-align: center; }
-        .logo { font-size: 50px; margin-bottom: 10px; }
-        h2 { color: #333; margin-bottom: 5px; font-weight: 700; }
-        p { color: #666; font-size: 14px; margin-bottom: 25px; }
+        body { background: linear-gradient(135deg, #74ebd5, #9face6); min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 15px; }
+        .container { background: #ffffff; width: 100%; max-width: 480px; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); text-align: center; }
         
-        .upload-box { border: 2px dashed #9face6; padding: 30px 20px; border-radius: 15px; background: #f9f9ff; cursor: pointer; position: relative; transition: all 0.3s ease; }
-        .upload-box:hover { border-color: #4a00e0; background: #f1f1ff; }
+        .upload-box { border: 2px dashed #9face6; padding: 20px; border-radius: 12px; background: #f9f9ff; cursor: pointer; position: relative; margin-bottom: 15px; }
         .upload-box input[type="file"] { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
-        .upload-icon { font-size: 40px; color: #888; margin-bottom: 10px; }
-        .file-name { font-size: 14px; color: #4a00e0; font-weight: 600; margin-top: 10px; word-break: break-all; }
         
-        .btn-print { display: block; width: 100%; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; border: none; padding: 15px; margin-top: 25px; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 5px 15px rgba(0, 242, 254, 0.3); transition: all 0.3s ease; }
-        .btn-print:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0, 242, 254, 0.4); }
-        .btn-print:disabled { background: #cccccc; box-shadow: none; cursor: not-allowed; transform: none; }
+        .selector-title { font-size: 12px; font-weight: bold; color: #666; text-align: left; margin-top: 10px; margin-left: 5px; text-transform: uppercase; }
+        .control-row { display: flex; justify-content: space-around; background: #eee; padding: 5px; border-radius: 10px; margin-bottom: 10px; }
+        .opt-btn { flex: 1; padding: 10px; border: none; background: none; font-weight: bold; color: #555; cursor: pointer; border-radius: 8px; }
+        .opt-btn.active { background: #4a00e0; color: white; box-shadow: 0 4px 10px rgba(74, 0, 224, 0.2); }
         
-        #status { margin-top: 15px; font-size: 14px; font-weight: 600; }
-        .success { color: #28a745; }
-        .error { color: #dc3545; }
-        .loading { color: #ffc107; }
+        /* Print Preview Sheet Setup */
+        .preview-container { display: none; margin: 15px 0; }
+        .preview-label { font-size: 13px; color: #4a00e0; font-weight: bold; margin-bottom: 8px; }
+        .paper-sheet { background: white; border: 1px solid #bbb; box-shadow: 0 8px 20px rgba(0,0,0,0.15); margin: 0 auto; padding: 15px; position: relative; box-sizing: border-box; display: flex; justify-content: center; align-items: center; transition: all 0.3s ease; }
+        .margin-border { border: 1px dashed #dc3545; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; background: #fafafa; overflow: hidden; }
+        .margin-border img, .margin-border canvas { max-width: 100%; max-height: 100%; object-fit: contain; }
+        
+        /* Layout CSS Ratios */
+        .p-a4-portrait { width: 220px; height: 311px; }
+        .p-a4-landscape { width: 311px; height: 220px; }
+        .p-a5-portrait { width: 156px; height: 220px; }
+        .p-a5-landscape { width: 220px; height: 156px; }
+        
+        .btn-print { display: block; width: 100%; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; border: none; padding: 14px; margin-top: 15px; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        .btn-print:disabled { background: #cccccc; cursor: not-allowed; }
+        #status { margin-top: 12px; font-size: 13px; font-weight: 600; }
+        .success { color: #28a745; } .error { color: #dc3545; } .loading { color: #ffc107; }
     </style>
 
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';</script>
 </head>
 <body>
 
 <div class="container">
-    <div class="logo">🖨️</div>
     <h2>Ambition Mart</h2>
-    <p>Upload your document</p>
+    <p>Apna layout set karein aur turant print nikalien</p>
     
     <div class="upload-box">
-        <div class="upload-icon">📁</div>
-        <span id="uploadText" style="color: #555; font-weight: 500;">Document ya Photo Select Karein</span>
-        <input type="file" id="fileInput" accept=".pdf, .png, .jpg, .jpeg" onchange="displayFileName()">
-        <div id="fileNameDisplay" class="file-name"></div>
+        <span id="uploadText" style="color: #555; font-weight: 500;">📁 PDF ya Photo Select Karein</span>
+        <input type="file" id="fileInput" accept=".pdf, .png, .jpg, .jpeg" onchange="handleFileSelect()">
+    </div>
+    
+    <div class="selector-title">Page Size</div>
+    <div class="control-row">
+        <button type="button" id="btnA4" class="opt-btn active" onclick="changeSize('A4')">A4 (Full)</button>
+        <button type="button" id="btnA5" class="opt-btn" onclick="changeSize('A5')">A5 (Half)</button>
+    </div>
+    
+    <div class="selector-title">Print Style (Orientation)</div>
+    <div class="control-row">
+        <button type="button" id="btnPortrait" class="opt-btn active" onclick="changeOrientation('portrait')">📱 Portrait </button>
+        <button type="button" id="btnLandscape" class="opt-btn" onclick="changeOrientation('landscape')">📟 Landscape </button>
+    </div>
+    
+    <div class="preview-container" id="previewContainer">
+        <div class="preview-label">📄 LIVE PREVIEW (RED LINE = MARGIN)</div>
+        <div id="paperSheet" class="paper-sheet p-a4-portrait">
+            <div class="margin-border" id="previewHolder"></div>
+        </div>
     </div>
     
     <button id="printBtn" class="btn-print" onclick="uploadAndPrint()" disabled>Upload & Print 🚀</button>
-    
     <p id="status"></p>
 </div>
 
 <script>
-    // Firebase Config Details (Maine bas URL ke extra slash ko theek kiya h)
     const firebaseConfig = {
-        apiKey: "AIzaSy...", // Teri asli key jo pehle thi
+        apiKey: "AIzaSy...", 
         authDomain: "qrprint-45949.firebaseapp.com",
         databaseURL: "https://qrprint-45949-default-rtdb.firebaseio.com/",
         projectId: "qrprint-45949",
@@ -62,96 +86,121 @@
         appId: "..."
     };
     
-    // Firebase Initialize
-    if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-    }
+    if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
     const database = firebase.database();
-
-    // Teri Google Web App Link
     const googleWebAppUrl = "https://script.google.com/macros/s/AKfycbyReUP0O-3WK3QpcVQZj2oIVblLlC113V3MO_m92uIKrxgyQg5OKi6Qoaid0U2v97Oj/exec";
 
-    // File select hone par naam dikhana
-    function displayFileName() {
-        const fileInput = document.getElementById('fileInput');
-        const fileNameDisplay = document.getElementById('fileNameDisplay');
-        const uploadText = document.getElementById('uploadText');
-        const printBtn = document.getElementById('printBtn');
-        
-        if (fileInput.files.length > 0) {
-            fileNameDisplay.innerText = fileInput.files[0].name;
-            uploadText.innerText = "File Change Karein";
-            printBtn.disabled = false;
-        } else {
-            fileNameDisplay.innerText = "";
-            uploadText.innerText = "Document ya Photo Select Karein";
-            printBtn.disabled = true;
-        }
-    }
+    let currentSize = "A4";
+    let currentOrientation = "portrait";
+    let fileDataUrl = "";
+    let rawFile = null;
 
-    // Main upload logic
-    function uploadAndPrint() {
+    function handleFileSelect() {
         const fileInput = document.getElementById('fileInput');
-        const status = document.getElementById('status');
-        const printBtn = document.getElementById('printBtn');
-        
         if (fileInput.files.length === 0) return;
         
-        const file = fileInput.files[0];
-        status.className = "loading";
-        status.innerText = "Google Drive par file upload ho rahi hai... ⏳";
-        printBtn.disabled = true;
+        rawFile = fileInput.files[0];
+        document.getElementById('uploadText').innerText = "Selected: " + rawFile.name;
+        document.getElementById('printBtn').disabled = false;
         
         const reader = new FileReader();
         reader.onload = function(e) {
+            fileDataUrl = e.target.result;
+            renderPreview();
+        };
+        
+        if (rawFile.type === "application/pdf") {
+            reader.readAsArrayBuffer(rawFile);
+        } else {
+            reader.readAsDataURL(rawFile);
+        }
+    }
+
+    function renderPreview() {
+        const previewHolder = document.getElementById('previewHolder');
+        const previewContainer = document.getElementById('previewContainer');
+        previewHolder.innerHTML = "";
+        updateSheetClass();
+        
+        if (rawFile.type.startsWith('image/')) {
+            const img = document.createElement('img');
+            img.src = fileDataUrl;
+            previewHolder.appendChild(img);
+            previewContainer.style.display = "block";
+        } else if (rawFile.type === "application/pdf") {
+            const typedarray = new Uint8Array(fileDataUrl);
+            pdfjsLib.getDocument(typedarray).promise.then(function(pdf) {
+                pdf.getPage(1).then(function(page) {
+                    const viewport = page.getViewport({ scale: 1.0 });
+                    const canvas = document.createElement('canvas');
+                    const context = canvas.getContext('2d');
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
+                    
+                    page.render({ canvasContext: context, viewport: viewport }).promise.then(function() {
+                        previewHolder.appendChild(canvas);
+                        previewContainer.style.display = "block";
+                    });
+                });
+            });
+        }
+    }
+
+    function updateSheetClass() {
+        const paperSheet = document.getElementById('paperSheet');
+        paperSheet.className = `paper-sheet p-${currentSize.toLowerCase()}-${currentOrientation}`;
+    }
+
+    function changeSize(size) {
+        currentSize = size;
+        document.getElementById('btnA4').className = size === "A4" ? "opt-btn active" : "opt-btn";
+        document.getElementById('btnA5').className = size === "A5" ? "opt-btn active" : "opt-btn";
+        updateSheetClass();
+    }
+
+    function changeOrientation(orient) {
+        currentOrientation = orient;
+        document.getElementById('btnPortrait').className = orient === "portrait" ? "opt-btn active" : "opt-btn";
+        document.getElementById('btnLandscape').className = orient === "landscape" ? "opt-btn active" : "opt-btn";
+        updateSheetClass();
+    }
+
+    function uploadAndPrint() {
+        const status = document.getElementById('status');
+        status.className = "loading";
+        status.innerText = "Google Drive par file upload ho rahi hai... ⏳";
+        
+        const uploadReader = new FileReader();
+        uploadReader.onload = function(e) {
             const base64Str = e.target.result.split(',')[1];
-            
             fetch(googleWebAppUrl, {
                 method: 'POST',
-                body: JSON.stringify({
-                    base64: base64Str,
-                    fileName: file.name,
-                    mimeType: file.type
-                })
+                body: JSON.stringify({ base64: base64Str, fileName: rawFile.name, mimeType: rawFile.type })
             })
             .then(res => res.json())
             .then(response => {
                 if(response.status === "success") {
-                    status.innerText = "Drive par upload ho gayi! Ab print command bheji ja rahi hai... 🚀";
-                    
                     const orderId = "order_" + Date.now();
                     database.ref('orders/' + orderId).set({
-                        file_name: file.name,
+                        file_name: rawFile.name,
                         file_url: response.file_url,
+                        page_size: currentSize,
+                        orientation: currentOrientation, // Yeh naya option database me jayega
                         status: "Pending"
                     }, (error) => {
-                        if (error) {
-                            status.className = "error";
-                            status.innerText = "Database entry failed: " + error.message;
-                            printBtn.disabled = false;
-                        } else {
+                        if (!error) {
                             status.className = "success";
-                            status.innerText = "Success! Aapka document automatic print ho raha hai. 🎉";
-                            fileInput.value = "";
-                            document.getElementById('fileNameDisplay').innerText = "";
-                            document.getElementById('uploadText').innerText = "Document ya Photo Select Karein";
+                            status.innerText = "Success! Print nikal raha hai. 🎉";
+                            document.getElementById('previewContainer').style.display = "none";
+                            document.getElementById('printBtn').disabled = true;
+                            document.getElementById('uploadText').innerText = "📁 PDF ya Photo Select Karein";
                         }
                     });
-                } else {
-                    status.className = "error";
-                    status.innerText = "Upload fail: " + response.message;
-                    printBtn.disabled = false;
                 }
-            })
-            .catch(err => {
-                status.className = "error";
-                status.innerText = "Server error: " + err.toString();
-                printBtn.disabled = false;
-            });
+            }).catch(err => { status.className = "error"; status.innerText = err.toString(); });
         };
-        reader.readAsDataURL(file);
+        uploadReader.readAsDataURL(rawFile);
     }
 </script>
-
 </body>
 </html>
